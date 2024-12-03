@@ -10,6 +10,13 @@ import {useCluster} from '../cluster/cluster-data-access'
 import {useAnchorProvider} from '../solana/solana-provider'
 import {useTransactionToast} from '../ui/ui-layout'
 
+interface CreateEntryArgs {
+  title: string;
+  message: string;
+  owner: PublicKey
+}
+
+
 export function useSolanacrudProgram() {
   const { connection } = useConnection()
   const { cluster } = useCluster()
@@ -28,23 +35,19 @@ export function useSolanacrudProgram() {
     queryFn: () => connection.getParsedAccountInfo(programId),
   })
 
-  const initialize = useMutation({
-    mutationKey: ['solanacrud', 'initialize', { cluster }],
-    mutationFn: (keypair: Keypair) =>
-      program.methods.initialize().accounts({ solanacrud: keypair.publicKey }).signers([keypair]).rpc(),
-    onSuccess: (signature) => {
-      transactionToast(signature)
-      return accounts.refetch()
-    },
-    onError: () => toast.error('Failed to initialize account'),
-  })
+  // const createEntry = useMutation<string, Error, CreateEntryArgs>({
+  //   mutationKey: ['journalEntry', 'create',  {cluster}],
+  //   mutationFn: async ({title, message, owner}) => {
+  //     return program.methods.createJournalEntry(title, message).rpc()
+  //   }
+  // })
+
 
   return {
     program,
     programId,
     accounts,
     getProgramAccount,
-    initialize,
   }
 }
 
@@ -57,48 +60,19 @@ export function useSolanacrudProgramAccount({ account }: { account: PublicKey })
     queryKey: ['solanacrud', 'fetch', { cluster, account }],
     queryFn: () => program.account.solanacrud.fetch(account),
   })
+  
 
-  const closeMutation = useMutation({
-    mutationKey: ['solanacrud', 'close', { cluster, account }],
-    mutationFn: () => program.methods.close().accounts({ solanacrud: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accounts.refetch()
-    },
-  })
 
-  const decrementMutation = useMutation({
-    mutationKey: ['solanacrud', 'decrement', { cluster, account }],
-    mutationFn: () => program.methods.decrement().accounts({ solanacrud: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
-    },
-  })
-
-  const incrementMutation = useMutation({
-    mutationKey: ['solanacrud', 'increment', { cluster, account }],
-    mutationFn: () => program.methods.increment().accounts({ solanacrud: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
-    },
-  })
-
-  const setMutation = useMutation({
-    mutationKey: ['solanacrud', 'set', { cluster, account }],
-    mutationFn: (value: number) => program.methods.set(value).accounts({ solanacrud: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
-    },
-  })
+  // const setMutation = useMutation({
+  //   mutationKey: ['solanacrud', 'set', { cluster, account }],
+  //   mutationFn: (value: number) => program.methods.set(value).accounts({ solanacrud: account }).rpc(),
+  //   onSuccess: (tx) => {
+  //     transactionToast(tx)
+  //     return accountQuery.refetch()
+  //   },
+  // })
 
   return {
     accountQuery,
-    closeMutation,
-    decrementMutation,
-    incrementMutation,
-    setMutation,
   }
 }
